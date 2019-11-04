@@ -46,8 +46,8 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.OSType;
 
 @PluginDescriptor(
-	name = "Login Screen",
-	description = "Provides various enhancements for login screen"
+		name = "Login Screen",
+		description = "Provides various enhancements for login screen"
 )
 @Slf4j
 public class LoginScreenPlugin extends Plugin implements KeyListener

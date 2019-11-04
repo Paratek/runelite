@@ -83,4 +83,5 @@ public class MenuOptionClicked
 	{
 		this.consumed = true;
 	}
+
 }

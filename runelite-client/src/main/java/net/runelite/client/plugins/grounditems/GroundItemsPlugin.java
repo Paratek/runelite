@@ -60,7 +60,6 @@ import net.runelite.api.Node;
 import net.runelite.api.Player;
 import net.runelite.api.Scene;
 import net.runelite.api.Tile;
-import net.runelite.api.TileItem;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.ConfigChanged;
@@ -115,15 +114,15 @@ public class GroundItemsPlugin extends Plugin
 
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)
-	private Map.Entry<Rectangle, GroundItem> textBoxBounds;
+	private Map.Entry<Rectangle, TileItem> textBoxBounds;
 
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)
-	private Map.Entry<Rectangle, GroundItem> hiddenBoxBounds;
+	private Map.Entry<Rectangle, TileItem> hiddenBoxBounds;
 
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)
-	private Map.Entry<Rectangle, GroundItem> highlightBoxBounds;
+	private Map.Entry<Rectangle, TileItem> highlightBoxBounds;
 
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)
@@ -164,7 +163,7 @@ public class GroundItemsPlugin extends Plugin
 	private Notifier notifier;
 
 	@Getter
-	private final Map<GroundItem.GroundItemKey, GroundItem> collectedGroundItems = new LinkedHashMap<>();
+	private final Map<TileItem.GroundItemKey, TileItem> collectedGroundItems = new LinkedHashMap<>();
 	private final Map<Integer, Color> priceChecks = new LinkedHashMap<>();
 	private LoadingCache<String, Boolean> highlightedItems;
 	private LoadingCache<String, Boolean> hiddenItems;
@@ -221,71 +220,71 @@ public class GroundItemsPlugin extends Plugin
 	@Subscribe
 	public void onItemSpawned(ItemSpawned itemSpawned)
 	{
-		TileItem item = itemSpawned.getItem();
+		net.runelite.api.TileItem item = itemSpawned.getItem();
 		Tile tile = itemSpawned.getTile();
 
-		GroundItem groundItem = buildGroundItem(tile, item);
+		TileItem tileItem = buildGroundItem(tile, item);
 
-		GroundItem.GroundItemKey groundItemKey = new GroundItem.GroundItemKey(item.getId(), tile.getWorldLocation());
-		GroundItem existing = collectedGroundItems.putIfAbsent(groundItemKey, groundItem);
+		TileItem.GroundItemKey groundItemKey = new TileItem.GroundItemKey(item.getId(), tile.getWorldLocation());
+		TileItem existing = collectedGroundItems.putIfAbsent(groundItemKey, tileItem);
 		if (existing != null)
 		{
-			existing.setQuantity(existing.getQuantity() + groundItem.getQuantity());
+			existing.setQuantity(existing.getQuantity() + tileItem.getQuantity());
 			// The spawn time remains set at the oldest spawn
 		}
 
 		boolean shouldNotify = !config.onlyShowLoot() && config.highlightedColor().equals(getHighlighted(
-			groundItem.getName(),
-			groundItem.getGePrice(),
-			groundItem.getHaPrice()));
+			tileItem.getName(),
+			tileItem.getGePrice(),
+			tileItem.getHaPrice()));
 
 		if (config.notifyHighlightedDrops() && shouldNotify)
 		{
-			notifyHighlightedItem(groundItem);
+			notifyHighlightedItem(tileItem);
 		}
 	}
 
 	@Subscribe
 	public void onItemDespawned(ItemDespawned itemDespawned)
 	{
-		TileItem item = itemDespawned.getItem();
+		net.runelite.api.TileItem item = itemDespawned.getItem();
 		Tile tile = itemDespawned.getTile();
 
-		GroundItem.GroundItemKey groundItemKey = new GroundItem.GroundItemKey(item.getId(), tile.getWorldLocation());
-		GroundItem groundItem = collectedGroundItems.get(groundItemKey);
-		if (groundItem == null)
+		TileItem.GroundItemKey groundItemKey = new TileItem.GroundItemKey(item.getId(), tile.getWorldLocation());
+		TileItem tileItem = collectedGroundItems.get(groundItemKey);
+		if (tileItem == null)
 		{
 			return;
 		}
 
-		if (groundItem.getQuantity() <= item.getQuantity())
+		if (tileItem.getQuantity() <= item.getQuantity())
 		{
 			collectedGroundItems.remove(groundItemKey);
 		}
 		else
 		{
-			groundItem.setQuantity(groundItem.getQuantity() - item.getQuantity());
+			tileItem.setQuantity(tileItem.getQuantity() - item.getQuantity());
 			// When picking up an item when multiple stacks appear on the ground,
 			// it is not known which item is picked up, so we invalidate the spawn
 			// time
-			groundItem.setSpawnTime(null);
+			tileItem.setSpawnTime(null);
 		}
 	}
 
 	@Subscribe
 	public void onItemQuantityChanged(ItemQuantityChanged itemQuantityChanged)
 	{
-		TileItem item = itemQuantityChanged.getItem();
+		net.runelite.api.TileItem item = itemQuantityChanged.getItem();
 		Tile tile = itemQuantityChanged.getTile();
 		int oldQuantity = itemQuantityChanged.getOldQuantity();
 		int newQuantity = itemQuantityChanged.getNewQuantity();
 
 		int diff = newQuantity - oldQuantity;
-		GroundItem.GroundItemKey groundItemKey = new GroundItem.GroundItemKey(item.getId(), tile.getWorldLocation());
-		GroundItem groundItem = collectedGroundItems.get(groundItemKey);
-		if (groundItem != null)
+		TileItem.GroundItemKey groundItemKey = new TileItem.GroundItemKey(item.getId(), tile.getWorldLocation());
+		TileItem tileItem = collectedGroundItems.get(groundItemKey);
+		if (tileItem != null)
 		{
-			groundItem.setQuantity(groundItem.getQuantity() + diff);
+			tileItem.setQuantity(tileItem.getQuantity() + diff);
 		}
 	}
 
@@ -356,26 +355,26 @@ public class GroundItemsPlugin extends Plugin
 		for (ItemStack itemStack : items)
 		{
 			WorldPoint location = WorldPoint.fromLocal(client, itemStack.getLocation());
-			GroundItem.GroundItemKey groundItemKey = new GroundItem.GroundItemKey(itemStack.getId(), location);
-			GroundItem groundItem = collectedGroundItems.get(groundItemKey);
-			if (groundItem != null)
+			TileItem.GroundItemKey groundItemKey = new TileItem.GroundItemKey(itemStack.getId(), location);
+			TileItem tileItem = collectedGroundItems.get(groundItemKey);
+			if (tileItem != null)
 			{
-				groundItem.setLootType(lootType);
+				tileItem.setLootType(lootType);
 
 				boolean shouldNotify = config.onlyShowLoot() && config.highlightedColor().equals(getHighlighted(
-					groundItem.getName(),
-					groundItem.getGePrice(),
-					groundItem.getHaPrice()));
+					tileItem.getName(),
+					tileItem.getGePrice(),
+					tileItem.getHaPrice()));
 
 				if (config.notifyHighlightedDrops() && shouldNotify)
 				{
-					notifyHighlightedItem(groundItem);
+					notifyHighlightedItem(tileItem);
 				}
 			}
 		}
 	}
 
-	private GroundItem buildGroundItem(final Tile tile, final TileItem item)
+	private TileItem buildGroundItem(final Tile tile, final net.runelite.api.TileItem item)
 	{
 		// Collect the data for the item
 		final int itemId = item.getId();
@@ -384,7 +383,7 @@ public class GroundItemsPlugin extends Plugin
 		final int alchPrice = Math.round(itemComposition.getPrice() * Constants.HIGH_ALCHEMY_MULTIPLIER);
 		final boolean dropped = tile.getWorldLocation().equals(client.getLocalPlayer().getWorldLocation()) && droppedItemQueue.remove(itemId);
 
-		final GroundItem groundItem = GroundItem.builder()
+		final TileItem tileItem = TileItem.builder()
 			.id(itemId)
 			.location(tile.getWorldLocation())
 			.itemId(realItemId)
@@ -402,15 +401,15 @@ public class GroundItemsPlugin extends Plugin
 		// Update item price in case it is coins
 		if (realItemId == COINS)
 		{
-			groundItem.setHaPrice(1);
-			groundItem.setGePrice(1);
+			tileItem.setHaPrice(1);
+			tileItem.setGePrice(1);
 		}
 		else
 		{
-			groundItem.setGePrice(itemManager.getItemPrice(realItemId));
+			tileItem.setGePrice(itemManager.getItemPrice(realItemId));
 		}
 
-		return groundItem;
+		return tileItem;
 	}
 
 	private void reset()
@@ -487,9 +486,9 @@ public class GroundItemsPlugin extends Plugin
 			int quantity = 1;
 			Node current = itemLayer.getBottom();
 
-			while (current instanceof TileItem)
+			while (current instanceof net.runelite.api.TileItem)
 			{
-				TileItem item = (TileItem) current;
+				net.runelite.api.TileItem item = (net.runelite.api.TileItem) current;
 				if (item.getId() == itemId)
 				{
 					quantity = item.getQuantity();
@@ -652,7 +651,7 @@ public class GroundItemsPlugin extends Plugin
 		}
 	}
 
-	private void notifyHighlightedItem(GroundItem item)
+	private void notifyHighlightedItem(TileItem item)
 	{
 		final Player local = client.getLocalPlayer();
 		final StringBuilder notificationStringBuilder = new StringBuilder()

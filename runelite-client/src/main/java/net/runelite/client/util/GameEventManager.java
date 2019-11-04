@@ -109,7 +109,6 @@ public class GameEventManager
 
 		clientThread.invoke(() ->
 		{
-
 			eventBus.register(subscriber);
 
 			for (final InventoryID inventory : InventoryID.values())

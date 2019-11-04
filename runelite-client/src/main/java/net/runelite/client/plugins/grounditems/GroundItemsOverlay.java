@@ -119,22 +119,22 @@ public class GroundItemsOverlay extends Overlay
 		offsetMap.clear();
 		final LocalPoint localLocation = player.getLocalLocation();
 		final Point mousePos = client.getMouseCanvasPosition();
-		Collection<GroundItem> groundItemList = plugin.getCollectedGroundItems().values();
-		GroundItem topGroundItem = null;
+		Collection<TileItem> tileItemList = plugin.getCollectedGroundItems().values();
+		TileItem topTileItem = null;
 
 		if (plugin.isHotKeyPressed())
 		{
 			// Make copy of ground items because we are going to modify them here, and the array list supports our
 			// desired behaviour here
-			groundItemList = new ArrayList<>(groundItemList);
+			tileItemList = new ArrayList<>(tileItemList);
 			final java.awt.Point awtMousePos = new java.awt.Point(mousePos.getX(), mousePos.getY());
-			GroundItem groundItem = null;
+			TileItem tileItem = null;
 
-			for (GroundItem item : groundItemList)
+			for (TileItem item : tileItemList)
 			{
 				item.setOffset(offsetMap.compute(item.getLocation(), (k, v) -> v != null ? v + 1 : 0));
 
-				if (groundItem != null)
+				if (tileItem != null)
 				{
 					continue;
 				}
@@ -143,7 +143,7 @@ public class GroundItemsOverlay extends Overlay
 					&& item.equals(plugin.getTextBoxBounds().getValue())
 					&& plugin.getTextBoxBounds().getKey().contains(awtMousePos))
 				{
-					groundItem = item;
+					tileItem = item;
 					continue;
 				}
 
@@ -151,7 +151,7 @@ public class GroundItemsOverlay extends Overlay
 					&& item.equals(plugin.getHiddenBoxBounds().getValue())
 					&& plugin.getHiddenBoxBounds().getKey().contains(awtMousePos))
 				{
-					groundItem = item;
+					tileItem = item;
 					continue;
 				}
 
@@ -159,15 +159,15 @@ public class GroundItemsOverlay extends Overlay
 					&& item.equals(plugin.getHighlightBoxBounds().getValue())
 					&& plugin.getHighlightBoxBounds().getKey().contains(awtMousePos))
 				{
-					groundItem = item;
+					tileItem = item;
 				}
 			}
 
-			if (groundItem != null)
+			if (tileItem != null)
 			{
-				groundItemList.remove(groundItem);
-				groundItemList.add(groundItem);
-				topGroundItem = groundItem;
+				tileItemList.remove(tileItem);
+				tileItemList.add(tileItem);
+				topTileItem = tileItem;
 			}
 		}
 
@@ -178,7 +178,7 @@ public class GroundItemsOverlay extends Overlay
 		final boolean onlyShowLoot = config.onlyShowLoot();
 		final boolean groundItemTimers = config.groundItemTimers();
 
-		for (GroundItem item : groundItemList)
+		for (TileItem item : tileItemList)
 		{
 			final LocalPoint groundPoint = LocalPoint.fromWorld(client, item.getLocation());
 
@@ -331,7 +331,7 @@ public class GroundItemsOverlay extends Overlay
 					plugin.setHighlightBoxBounds(new SimpleEntry<>(itemHighlightBox, item));
 				}
 
-				boolean topItem = topGroundItem == item;
+				boolean topItem = topTileItem == item;
 
 				// Draw background if hovering
 				if (topItem && (mouseInBox || mouseInHiddenBox || mouseInHighlightBox))
@@ -361,10 +361,10 @@ public class GroundItemsOverlay extends Overlay
 		return null;
 	}
 
-	private void drawTimerOverlay(Graphics2D graphics, int textX, int textY, GroundItem groundItem)
+	private void drawTimerOverlay(Graphics2D graphics, int textX, int textY, TileItem tileItem)
 	{
 		// We can only accurately guess despawn times for our own pvm loot and dropped items
-		if (groundItem.getLootType() != LootType.PVM && !groundItem.isDropped())
+		if (tileItem.getLootType() != LootType.PVM && !tileItem.isDropped())
 		{
 			return;
 		}
@@ -373,7 +373,7 @@ public class GroundItemsOverlay extends Overlay
 		// Dropped items appear to others after 1 minute, and despawns after 3 minutes
 		// Items in instances never appear to anyone and despawn after 30 minutes
 
-		Instant spawnTime = groundItem.getSpawnTime();
+		Instant spawnTime = tileItem.getSpawnTime();
 		if (spawnTime == null)
 		{
 			return;
@@ -395,7 +395,7 @@ public class GroundItemsOverlay extends Overlay
 		}
 		else
 		{
-			if (groundItem.isDropped())
+			if (tileItem.isDropped())
 			{
 				despawnTime = spawnTime.plus(DESPAWN_TIME_DROP);
 			}
