@@ -16,7 +16,8 @@ import java.util.stream.Collectors;
 
 public class Logger {
 
-    private static final Path out = Paths.get("C:\\Users\\Jordan\\Documents\\logs\\log"
+    private static final String home = System.getProperty("user.home");
+    private static final Path out = Paths.get(home + "/rl-logs/log_"
             + new SimpleDateFormat("yyyyMMdd-HH-MM-SS").format(new Date()) + ".log");
 
     public static void write(final String text) {

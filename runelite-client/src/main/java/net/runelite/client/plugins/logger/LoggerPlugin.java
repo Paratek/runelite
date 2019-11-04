@@ -37,10 +37,17 @@ public class LoggerPlugin extends Plugin {
     private final LoggerKeyListener keyListener = new LoggerKeyListener();
     private final LoggerMouseListener mouseListener = new LoggerMouseListener();
 
+    private PlayerMovementListener playerMovementListener;
+    private NpcMovementListener npcMovementListener;
+    private CameraMovementListener cameraMovementListener;
+
     @Override
     protected void startUp() throws Exception {
         this.keyManager.registerKeyListener(this.keyListener);
         this.mouseManager.registerMouseListener(this.mouseListener);
+        this.playerMovementListener = new PlayerMovementListener(this.client);
+        this.npcMovementListener = new NpcMovementListener(this.client);
+        this.cameraMovementListener = new CameraMovementListener(this.client);
         super.startUp();
     }
 
@@ -65,11 +72,6 @@ public class LoggerPlugin extends Plugin {
     /* Player */
 
     @Subscribe
-    public void onPlayerMoved(PlayerMoved e) {
-
-    }
-
-    @Subscribe
     public void onPlayerSpawned(PlayerSpawned e) {
         final Player player = e.getPlayer();
         final LocalPoint p = player.getLocalLocation();
@@ -84,6 +86,7 @@ public class LoggerPlugin extends Plugin {
         Logger.write(LogEntry.PLAYER_DESPAWNED, player.getName(), player.getAnimation(),
                 player.getLocalLocation().getX(), player.getLocalLocation().getY(),
                 player.getLocalLocation().getSceneX(), player.getLocalLocation().getSceneY());
+        playerMovementListener.getPositionMap().remove(e.getPlayer().getName());
     }
 
     /* Npc */
@@ -172,6 +175,30 @@ public class LoggerPlugin extends Plugin {
     public void onMenuOptionClicked(MenuOptionClicked e) {
         Logger.write(LogEntry.MENU_ACTION_CLICKED, e.getActionParam(), e.getMenuOption(), e.getMenuTarget(),
                 e.getMenuAction().getId(), e.getId(), e.getWidgetId(), e.isConsumed());
+    }
+
+    /* Misc */
+
+    @Subscribe
+    public void onVarbitChanged(VarbitChanged e) {
+        Logger.write(LogEntry.VARBIT_CHANGED, e.getIndex(), this.client.getVarps()[e.getIndex()]);
+    }
+
+    @Subscribe
+    public void onExperienceChanged(ExperienceChanged e) {
+        Logger.write(LogEntry.XP_GAINED, e.getSkill().getName(), this.client.getSkillExperience(e.getSkill()));
+    }
+
+    @Subscribe
+    public void onGameTick(GameTick e) {
+        this.playerMovementListener.update();
+        this.npcMovementListener.update();
+        this.cameraMovementListener.update();
+    }
+
+    @Subscribe
+    public void onGameStateChanged(GameStateChanged e) {
+        Logger.write(LogEntry.GAME_STATE_CHANGED, e.getGameState().name());
     }
 
 }
