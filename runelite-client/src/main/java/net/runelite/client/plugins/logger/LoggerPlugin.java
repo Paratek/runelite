@@ -163,6 +163,7 @@ public class LoggerPlugin extends Plugin {
     @Subscribe
     public void onWidgetLoaded(WidgetLoaded e) {
         Logger.write(LogEntry.WIDGET_LOADED, e.getGroupId());
+
     }
 
     /* Interaction */
