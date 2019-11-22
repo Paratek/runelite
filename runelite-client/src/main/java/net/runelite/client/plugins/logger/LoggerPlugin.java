@@ -41,6 +41,8 @@ public class LoggerPlugin extends Plugin {
     private NpcMovementListener npcMovementListener;
     private CameraMovementListener cameraMovementListener;
 
+    public static boolean enabled = false;
+
     @Override
     protected void startUp() throws Exception {
         this.keyManager.registerKeyListener(this.keyListener);
@@ -48,6 +50,7 @@ public class LoggerPlugin extends Plugin {
         this.playerMovementListener = new PlayerMovementListener(this.client);
         this.npcMovementListener = new NpcMovementListener(this.client);
         this.cameraMovementListener = new CameraMovementListener(this.client);
+        enabled = true;
         super.startUp();
     }
 
@@ -55,6 +58,7 @@ public class LoggerPlugin extends Plugin {
     protected void shutDown() throws Exception {
         this.keyManager.unregisterKeyListener(this.keyListener);
         this.mouseManager.unregisterMouseListener(this.mouseListener);
+        enabled = false;
         super.shutDown();
     }
 
@@ -185,8 +189,8 @@ public class LoggerPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onExperienceChanged(ExperienceChanged e) {
-        Logger.write(LogEntry.XP_GAINED, e.getSkill().getName(), this.client.getSkillExperience(e.getSkill()));
+    public void onStatChanged(StatChanged e) {
+        Logger.write(LogEntry.XP_GAINED, e.getSkill().getName(), e.getXp(), e.getLevel());
     }
 
     @Subscribe

@@ -21,10 +21,12 @@ public class Logger {
             + new SimpleDateFormat("yyyyMMdd-HH-MM-SS").format(new Date()) + ".log");
 
     public static void write(final String text) {
-        try {
-            Files.write(out, (System.currentTimeMillis() + " " + text + "\n").getBytes(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (LoggerPlugin.enabled) {
+            try {
+                Files.write(out, (System.currentTimeMillis() + " " + text + "\n").getBytes(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

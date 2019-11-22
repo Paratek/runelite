@@ -33,6 +33,7 @@ import com.google.inject.Injector;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.net.Authenticator;
 import java.util.Locale;
 import javax.annotation.Nullable;
 import javax.inject.Provider;
@@ -161,6 +162,15 @@ public class RuneLite
 
 	public static void main(String[] args) throws Exception
 	{
+		String username = "jordan";
+		String password = "supersecure";
+		System.setProperty("socksProxyHost", "socks.paratek.io");
+		System.setProperty("socksProxyPort", "1080");
+		System.setProperty("java.net.socks.username", username);
+		System.setProperty("java.net.socks.password", password);
+        System.out.println(username + ", " + password + ", " + System.getProperty("socksProxyHost"));
+		Authenticator.setDefault(new ProxyAuthenticator(username, password));
+
 		Locale.setDefault(Locale.ENGLISH);
 
 		final OptionParser parser = new OptionParser();
